@@ -67,6 +67,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
  * <p>This wrapper can contain at most one video track and one audio track.
  */
 /* package */ final class MuxerWrapper {
+
   private static final String TAG = "MuxerWrapper";
 
   /**
@@ -85,14 +86,20 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
     }
   }
 
-  /** Different modes for muxing. */
+  /**
+   * Different modes for muxing.
+   */
   @Documented
   @Retention(RetentionPolicy.SOURCE)
   @Target(TYPE_USE)
   @IntDef({MUXER_MODE_DEFAULT, MUXER_MODE_MUX_PARTIAL, MUXER_MODE_APPEND})
-  public @interface MuxerMode {}
+  public @interface MuxerMode {
 
-  /** The default muxer mode. */
+  }
+
+  /**
+   * The default muxer mode.
+   */
   public static final int MUXER_MODE_DEFAULT = 0;
 
   /**
@@ -102,30 +109,43 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
    */
   public static final int MUXER_MODE_MUX_PARTIAL = 1;
 
-  /** Used for appending the remaining samples with the previously muxed partial file. */
+  /**
+   * Used for appending the remaining samples with the previously muxed partial file.
+   */
   public static final int MUXER_MODE_APPEND = 2;
 
-  /** Represents a reason for which the muxer is released. */
+  /**
+   * Represents a reason for which the muxer is released.
+   */
   @Documented
   @Retention(RetentionPolicy.SOURCE)
   @Target(TYPE_USE)
   @IntDef({
-    MUXER_RELEASE_REASON_COMPLETED,
-    MUXER_RELEASE_REASON_CANCELLED,
-    MUXER_RELEASE_REASON_ERROR
+      MUXER_RELEASE_REASON_COMPLETED,
+      MUXER_RELEASE_REASON_CANCELLED,
+      MUXER_RELEASE_REASON_ERROR
   })
-  public @interface MuxerReleaseReason {}
+  public @interface MuxerReleaseReason {
 
-  /** Muxer is released after the export completed successfully. */
+  }
+
+  /**
+   * Muxer is released after the export completed successfully.
+   */
   public static final int MUXER_RELEASE_REASON_COMPLETED = 0;
 
-  /** Muxer is released after the export was cancelled. */
+  /**
+   * Muxer is released after the export was cancelled.
+   */
   public static final int MUXER_RELEASE_REASON_CANCELLED = 1;
 
-  /** Muxer is released after an error occurred during the export. */
+  /**
+   * Muxer is released after an error occurred during the export.
+   */
   public static final int MUXER_RELEASE_REASON_ERROR = 2;
 
   public interface Listener {
+
     void onTrackEnded(
         @C.TrackType int trackType, Format format, int averageBitrate, int sampleCount);
 
@@ -149,7 +169,8 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
   private final Listener listener;
   private final boolean dropSamplesBeforeFirstVideoSample;
   private final SparseArray<TrackInfo> trackTypeToInfo;
-  @Nullable private final Format appendVideoFormat;
+  @Nullable
+  private final Format appendVideoFormat;
 
   private boolean isReady;
   private boolean isEnded;
@@ -173,15 +194,15 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
    * <p>{@code appendVideoFormat} must be non-{@code null} when using {@link
    * #MUXER_MODE_MUX_PARTIAL}.
    *
-   * @param outputPath The output file path to write the media data to.
-   * @param muxerFactory A {@link Muxer.Factory} to create a {@link Muxer}.
-   * @param listener A {@link MuxerWrapper.Listener}.
-   * @param muxerMode The {@link MuxerMode}. The initial mode must be {@link #MUXER_MODE_DEFAULT} or
-   *     {@link #MUXER_MODE_MUX_PARTIAL}.
+   * @param outputPath                        The output file path to write the media data to.
+   * @param muxerFactory                      A {@link Muxer.Factory} to create a {@link Muxer}.
+   * @param listener                          A {@link MuxerWrapper.Listener}.
+   * @param muxerMode                         The {@link MuxerMode}. The initial mode must be {@link #MUXER_MODE_DEFAULT} or
+   *                                          {@link #MUXER_MODE_MUX_PARTIAL}.
    * @param dropSamplesBeforeFirstVideoSample Whether to drop any non-video samples with
-   *     presentation timestamps before the first video sample.
-   * @param appendVideoFormat The format which will be used to write samples after transitioning
-   *     from {@link #MUXER_MODE_MUX_PARTIAL} to {@link #MUXER_MODE_APPEND}.
+   *                                          presentation timestamps before the first video sample.
+   * @param appendVideoFormat                 The format which will be used to write samples after transitioning
+   *                                          from {@link #MUXER_MODE_MUX_PARTIAL} to {@link #MUXER_MODE_APPEND}.
    */
   public MuxerWrapper(
       String outputPath,
@@ -212,10 +233,10 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
    * same initialization data cannot represent both bitstreams.
    *
    * @param existingVideoTrackFormat The starting video format to compare.
-   * @param newVideoTrackFormat The candidate format of the video bitstream to be appended after the
-   *     existing format.
+   * @param newVideoTrackFormat      The candidate format of the video bitstream to be appended after the
+   *                                 existing format.
    * @return The initialization data that captures both input formats, or {@code null} if both
-   *     formats cannot be represented by the same initialization data.
+   * formats cannot be represented by the same initialization data.
    */
   @Nullable
   @VisibleForTesting(otherwise = PRIVATE)
@@ -297,7 +318,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
    * <p>Can be called from any thread.
    *
    * @throws IllegalStateException If a track format was {@linkplain #addTrackFormat(Format) added}
-   *     before calling this method.
+   *                               before calling this method.
    */
   public void setAdditionalRotationDegrees(int additionalRotationDegrees) {
     checkState(
@@ -317,7 +338,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
    * <p>Can be called from any thread.
    *
    * @throws IllegalStateException If a track format was {@linkplain #addTrackFormat(Format) added}
-   *     before calling this method.
+   *                               before calling this method.
    */
   public void setTrackCount(@IntRange(from = 1) int trackCount) {
     if (muxerMode == MUXER_MODE_APPEND) {
@@ -329,7 +350,9 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
     this.trackCount = trackCount;
   }
 
-  /** Returns whether the sample {@linkplain MimeTypes MIME type} is supported. */
+  /**
+   * Returns whether the sample {@linkplain MimeTypes MIME type} is supported.
+   */
   public boolean supportsSampleMimeType(@Nullable String mimeType) {
     @C.TrackType int trackType = MimeTypes.getTrackType(mimeType);
     return getSupportedSampleMimeTypes(trackType).contains(mimeType);
@@ -354,17 +377,17 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
    * present.
    *
    * @param format The {@link Format} to be added. In {@link #MUXER_MODE_APPEND} mode, the added
-   *     {@link Format} must match the existing {@link Format} set when the muxer was in {@link
-   *     #MUXER_MODE_MUX_PARTIAL} mode.
+   *               {@link Format} must match the existing {@link Format} set when the muxer was in {@link
+   *               #MUXER_MODE_MUX_PARTIAL} mode.
    * @throws AppendTrackFormatException If the existing {@link Format} does not match the newly
-   *     added {@link Format} in {@link #MUXER_MODE_APPEND}.
-   * @throws IllegalArgumentException If the format is unsupported or if it does not match the
-   *     existing format in {@link #MUXER_MODE_APPEND} mode.
-   * @throws IllegalStateException If the number of formats added exceeds the {@linkplain
-   *     #setTrackCount track count}, if {@link #setTrackCount(int)} has not been called or if there
-   *     is already a track of that {@link C.TrackType}.
-   * @throws MuxerException If the underlying {@link Muxer} encounters a problem while adding the
-   *     track.
+   *                                    added {@link Format} in {@link #MUXER_MODE_APPEND}.
+   * @throws IllegalArgumentException   If the format is unsupported or if it does not match the
+   *                                    existing format in {@link #MUXER_MODE_APPEND} mode.
+   * @throws IllegalStateException      If the number of formats added exceeds the {@linkplain
+   *                                    #setTrackCount track count}, if {@link #setTrackCount(int)} has not been called or if there
+   *                                    is already a track of that {@link C.TrackType}.
+   * @throws MuxerException             If the underlying {@link Muxer} encounters a problem while adding the
+   *                                    track.
    */
   public void addTrackFormat(Format format) throws AppendTrackFormatException, MuxerException {
     @Nullable String sampleMimeType = format.sampleMimeType;
@@ -497,7 +520,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
    * added}.
    *
    * @throws IllegalArgumentException If the {@code trackType} has not been {@linkplain
-   *     #addTrackFormat added}.
+   *                                  #addTrackFormat added}.
    */
   public Format getTrackFormat(@C.TrackType int trackType) {
     checkArgument(contains(trackTypeToInfo, trackType));
@@ -507,18 +530,18 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
   /**
    * Attempts to write a sample to the muxer.
    *
-   * @param trackType The {@link C.TrackType} of the sample.
-   * @param data The sample to write.
-   * @param isKeyFrame Whether the sample is a key frame.
+   * @param trackType          The {@link C.TrackType} of the sample.
+   * @param data               The sample to write.
+   * @param isKeyFrame         Whether the sample is a key frame.
    * @param presentationTimeUs The presentation time of the sample in microseconds.
    * @return Whether the sample was successfully written, or dropped if configured to drop the
-   *     sample via {@code dropSamplesBeforeFirstVideoSample}. {@code false} if samples of other
-   *     {@linkplain C.TrackType track types} should be written first to ensure the files track
-   *     interleaving is balanced, or if the muxer hasn't {@linkplain #addTrackFormat(Format)
-   *     received a format} for every {@linkplain #setTrackCount(int) track}.
+   * sample via {@code dropSamplesBeforeFirstVideoSample}. {@code false} if samples of other
+   * {@linkplain C.TrackType track types} should be written first to ensure the files track
+   * interleaving is balanced, or if the muxer hasn't {@linkplain #addTrackFormat(Format)
+   * received a format} for every {@linkplain #setTrackCount(int) track}.
    * @throws IllegalArgumentException If the muxer doesn't have a {@linkplain #endTrack(int)
-   *     non-ended} track of the given {@link C.TrackType}.
-   * @throws MuxerException If the underlying {@link Muxer} fails to write the sample.
+   *                                  non-ended} track of the given {@link C.TrackType}.
+   * @throws MuxerException           If the underlying {@link Muxer} fails to write the sample.
    */
   public boolean writeSample(
       @C.TrackType int trackType, ByteBuffer data, boolean isKeyFrame, long presentationTimeUs)
@@ -581,6 +604,10 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
             /* flags= */ isKeyFrame ? C.BUFFER_FLAG_KEY_FRAME : 0);
     muxer.writeSampleData(trackInfo.trackId, data, bufferInfo);
 
+    Log.d(TAG, COMPONENT_MUXER
+        + " " + Util.getTrackTypeString(trackType)
+        + " " + bufferInfo.presentationTimeUs
+    );
     DebugTraceUtil.logEvent(
         COMPONENT_MUXER,
         EVENT_ACCEPTED_INPUT,
@@ -648,8 +675,8 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
   public boolean isEnded() {
     return isEnded
         || (muxerMode == MUXER_MODE_MUX_PARTIAL
-            && muxedPartialVideo
-            && (muxedPartialAudio || trackCount == 1));
+        && muxedPartialVideo
+        && (muxedPartialAudio || trackCount == 1));
   }
 
   /**
@@ -665,7 +692,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
    *
    * @param releaseReason The reason to release the muxer.
    * @throws MuxerException If the underlying {@link Muxer} fails to finish writing the output and
-   *     the {@code releaseReason} is not {@link #MUXER_RELEASE_REASON_CANCELLED}.
+   *                        the {@code releaseReason} is not {@link #MUXER_RELEASE_REASON_CANCELLED}.
    */
   public void finishWritingAndMaybeRelease(@MuxerReleaseReason int releaseReason)
       throws MuxerException {
@@ -679,7 +706,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
       } catch (MuxerException e) {
         if (releaseReason == MUXER_RELEASE_REASON_CANCELLED
             && checkNotNull(e.getMessage())
-                .equals(FrameworkMuxer.MUXER_STOPPING_FAILED_ERROR_MESSAGE)) {
+            .equals(FrameworkMuxer.MUXER_STOPPING_FAILED_ERROR_MESSAGE)) {
           // When releasing the muxer, FrameworkMuxer may sometimes fail before the actual release.
           // When the release is due to cancellation, swallow this exception.
           return;
@@ -735,7 +762,9 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
     }
   }
 
-  /** Returns the current size in bytes of the output, or {@link C#LENGTH_UNSET} if unavailable. */
+  /**
+   * Returns the current size in bytes of the output, or {@link C#LENGTH_UNSET} if unavailable.
+   */
   private long getCurrentOutputSizeBytes() {
     long fileSize = new File(outputPath).length();
     return fileSize > 0 ? fileSize : C.LENGTH_UNSET;
@@ -758,6 +787,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
   }
 
   private static final class TrackInfo {
+
     public final Format format;
     public final int trackId;
 

@@ -55,7 +55,7 @@ public final class DebugTraceUtil {
    * and debugging purposes only.
    */
   @SuppressWarnings("NonFinalStaticField") // Only for debugging/testing.
-  public static boolean enableTracing = false;
+  public static boolean enableTracing = true;
 
   /** Events logged by {@link #logEvent}. */
   @Documented

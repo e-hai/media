@@ -21,6 +21,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Pair;
 import android.view.KeyEvent;
 import android.view.View;
@@ -64,7 +65,9 @@ import java.util.Collections;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
-/** An activity that plays media using {@link ExoPlayer}. */
+/**
+ * An activity that plays media using {@link ExoPlayer}.
+ */
 public class PlayerActivity extends AppCompatActivity
     implements OnClickListener, PlayerView.ControllerVisibilityListener {
 
@@ -94,9 +97,11 @@ public class PlayerActivity extends AppCompatActivity
 
   // For ad playback only.
 
-  @Nullable private AdsLoader clientSideAdsLoader;
+  @Nullable
+  private AdsLoader clientSideAdsLoader;
 
-  @Nullable private ImaServerSideAdInsertionMediaSource.AdsLoader serverSideAdsLoader;
+  @Nullable
+  private ImaServerSideAdInsertionMediaSource.AdsLoader serverSideAdsLoader;
 
   private ImaServerSideAdInsertionMediaSource.AdsLoader.@MonotonicNonNull State
       serverSideAdsLoaderState;
@@ -269,13 +274,18 @@ public class PlayerActivity extends AppCompatActivity
       if (mediaItems.isEmpty()) {
         return false;
       }
-
+      Log.d("PlayerActivity",
+          "extension: "
+              + intent.getBooleanExtra(IntentUtil.PREFER_EXTENSION_DECODERS_EXTRA, false)
+      );
       lastSeenTracks = Tracks.EMPTY;
       ExoPlayer.Builder playerBuilder =
           new ExoPlayer.Builder(/* context= */ this)
               .setMediaSourceFactory(createMediaSourceFactory());
       setRenderersFactory(
-          playerBuilder, intent.getBooleanExtra(IntentUtil.PREFER_EXTENSION_DECODERS_EXTRA, false));
+          playerBuilder,
+          intent.getBooleanExtra(IntentUtil.PREFER_EXTENSION_DECODERS_EXTRA, false)
+      );
       player = playerBuilder.build();
       player.setTrackSelectionParameters(trackSelectionParameters);
       player.addListener(new PlayerEventListener());

@@ -58,7 +58,9 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 
-/** Default {@link RenderersFactory} implementation. */
+/**
+ * Default {@link RenderersFactory} implementation.
+ */
 @UnstableApi
 public class DefaultRenderersFactory implements RenderersFactory {
 
@@ -76,9 +78,13 @@ public class DefaultRenderersFactory implements RenderersFactory {
   @Retention(RetentionPolicy.SOURCE)
   @Target(TYPE_USE)
   @IntDef({EXTENSION_RENDERER_MODE_OFF, EXTENSION_RENDERER_MODE_ON, EXTENSION_RENDERER_MODE_PREFER})
-  public @interface ExtensionRendererMode {}
+  public @interface ExtensionRendererMode {
 
-  /** Do not allow use of extension renderers. */
+  }
+
+  /**
+   * Do not allow use of extension renderers.
+   */
   public static final int EXTENSION_RENDERER_MODE_OFF = 0;
 
   /**
@@ -194,7 +200,7 @@ public class DefaultRenderersFactory implements RenderersFactory {
    * This may result in using a decoder that is less efficient or slower than the primary decoder.
    *
    * @param enableDecoderFallback Whether to enable fallback to lower-priority decoders if decoder
-   *     initialization fails.
+   *                              initialization fails.
    * @return This factory, for convenience.
    */
   @CanIgnoreReturnValue
@@ -260,7 +266,7 @@ public class DefaultRenderersFactory implements RenderersFactory {
    * speed reflecting the fact that the requested speed was not supported.
    *
    * @param enableAudioOutputPlaybackParameters Whether to enable setting playback speed via {@link
-   *     AudioOutput}.
+   *                                            AudioOutput}.
    * @return This factory, for convenience.
    */
   @CanIgnoreReturnValue
@@ -285,8 +291,8 @@ public class DefaultRenderersFactory implements RenderersFactory {
    * in a future release.
    *
    * @param enableMediaCodecVideoRendererPrewarming Whether to enable {@link
-   *     #buildSecondaryVideoRenderer} to provide a secondary {@link MediaCodecVideoRenderer} for
-   *     pre-warming.
+   *                                                #buildSecondaryVideoRenderer} to provide a secondary {@link MediaCodecVideoRenderer} for
+   *                                                pre-warming.
    * @return This factory, for convenience.
    */
   @CanIgnoreReturnValue
@@ -341,7 +347,7 @@ public class DefaultRenderersFactory implements RenderersFactory {
    * <p>The default value is {@link #DEFAULT_ALLOWED_VIDEO_JOINING_TIME_MS}.
    *
    * @param allowedVideoJoiningTimeMs The maximum duration for which video renderers can attempt to
-   *     seamlessly join an ongoing playback, in milliseconds.
+   *                                  seamlessly join an ongoing playback, in milliseconds.
    * @return This factory, for convenience.
    */
   @CanIgnoreReturnValue
@@ -421,17 +427,17 @@ public class DefaultRenderersFactory implements RenderersFactory {
   /**
    * Builds video renderers for use by the player.
    *
-   * @param context The {@link Context} associated with the player.
-   * @param extensionRendererMode The extension renderer mode.
-   * @param mediaCodecSelector A decoder selector.
-   * @param enableDecoderFallback Whether to enable fallback to lower-priority decoders if decoder
-   *     initialization fails. This may result in using a decoder that is slower/less efficient than
-   *     the primary decoder.
-   * @param eventHandler A handler associated with the main thread's looper.
-   * @param eventListener An event listener.
+   * @param context                   The {@link Context} associated with the player.
+   * @param extensionRendererMode     The extension renderer mode.
+   * @param mediaCodecSelector        A decoder selector.
+   * @param enableDecoderFallback     Whether to enable fallback to lower-priority decoders if decoder
+   *                                  initialization fails. This may result in using a decoder that is slower/less efficient than
+   *                                  the primary decoder.
+   * @param eventHandler              A handler associated with the main thread's looper.
+   * @param eventListener             An event listener.
    * @param allowedVideoJoiningTimeMs The maximum duration for which video renderers can attempt to
-   *     seamlessly join an ongoing playback, in milliseconds.
-   * @param out An array to which the built renderers should be appended.
+   *                                  seamlessly join an ongoing playback, in milliseconds.
+   * @param out                       An array to which the built renderers should be appended.
    */
   protected void buildVideoRenderers(
       Context context,
@@ -454,9 +460,9 @@ public class DefaultRenderersFactory implements RenderersFactory {
             .experimentalSetParseAv1SampleDependencies(parseAv1SampleDependencies)
             .experimentalSetLateThresholdToDropDecoderInputUs(lateThresholdToDropDecoderInputUs);
     if (SDK_INT >= 34) {
-      videoRendererBuilder =
-          videoRendererBuilder.experimentalSetEnableMediaCodecBufferDecodeOnlyFlag(
-              enableMediaCodecBufferDecodeOnlyFlag);
+      videoRendererBuilder = videoRendererBuilder.experimentalSetEnableMediaCodecBufferDecodeOnlyFlag(
+          enableMediaCodecBufferDecodeOnlyFlag
+      );
     }
     out.add(videoRendererBuilder.build());
 
@@ -560,16 +566,16 @@ public class DefaultRenderersFactory implements RenderersFactory {
   /**
    * Builds audio renderers for use by the player.
    *
-   * @param context The {@link Context} associated with the player.
+   * @param context               The {@link Context} associated with the player.
    * @param extensionRendererMode The extension renderer mode.
-   * @param mediaCodecSelector A decoder selector.
+   * @param mediaCodecSelector    A decoder selector.
    * @param enableDecoderFallback Whether to enable fallback to lower-priority decoders if decoder
-   *     initialization fails. This may result in using a decoder that is slower/less efficient than
-   *     the primary decoder.
-   * @param audioSink A sink to which the renderers will output.
-   * @param eventHandler A handler to use when invoking event listeners and outputs.
-   * @param eventListener An event listener.
-   * @param out An array to which the built renderers should be appended.
+   *                              initialization fails. This may result in using a decoder that is slower/less efficient than
+   *                              the primary decoder.
+   * @param audioSink             A sink to which the renderers will output.
+   * @param eventHandler          A handler to use when invoking event listeners and outputs.
+   * @param eventListener         An event listener.
+   * @param out                   An array to which the built renderers should be appended.
    */
   protected void buildAudioRenderers(
       Context context,
@@ -743,11 +749,11 @@ public class DefaultRenderersFactory implements RenderersFactory {
   /**
    * Builds text renderers for use by the player.
    *
-   * @param context The {@link Context} associated with the player.
-   * @param output An output for the renderers.
-   * @param outputLooper The looper associated with the thread on which the output should be called.
+   * @param context               The {@link Context} associated with the player.
+   * @param output                An output for the renderers.
+   * @param outputLooper          The looper associated with the thread on which the output should be called.
    * @param extensionRendererMode The extension renderer mode.
-   * @param out An array to which the built renderers should be appended.
+   * @param out                   An array to which the built renderers should be appended.
    */
   protected void buildTextRenderers(
       Context context,
@@ -761,11 +767,11 @@ public class DefaultRenderersFactory implements RenderersFactory {
   /**
    * Builds metadata renderers for use by the player.
    *
-   * @param context The {@link Context} associated with the player.
-   * @param output An output for the renderers.
-   * @param outputLooper The looper associated with the thread on which the output should be called.
+   * @param context               The {@link Context} associated with the player.
+   * @param output                An output for the renderers.
+   * @param outputLooper          The looper associated with the thread on which the output should be called.
    * @param extensionRendererMode The extension renderer mode.
-   * @param out An array to which the built renderers should be appended.
+   * @param out                   An array to which the built renderers should be appended.
    */
   protected void buildMetadataRenderers(
       Context context,
@@ -780,9 +786,9 @@ public class DefaultRenderersFactory implements RenderersFactory {
   /**
    * Builds camera motion renderers for use by the player.
    *
-   * @param context The {@link Context} associated with the player.
+   * @param context               The {@link Context} associated with the player.
    * @param extensionRendererMode The extension renderer mode.
-   * @param out An array to which the built renderers should be appended.
+   * @param out                   An array to which the built renderers should be appended.
    */
   protected void buildCameraMotionRenderers(
       Context context, @ExtensionRendererMode int extensionRendererMode, ArrayList<Renderer> out) {
@@ -804,7 +810,7 @@ public class DefaultRenderersFactory implements RenderersFactory {
    * ImageDecoder.Factory} set to {@code ImageDecoder.Factory.DEFAULT} by default.
    *
    * @param context The {@link Context} associated with the player.
-   * @param out An array to which the built renderers should be appended.
+   * @param out     An array to which the built renderers should be appended.
    */
   protected void buildImageRenderers(Context context, ArrayList<Renderer> out) {
     buildImageRenderers(out);
@@ -813,10 +819,10 @@ public class DefaultRenderersFactory implements RenderersFactory {
   /**
    * Builds any miscellaneous renderers used by the player.
    *
-   * @param context The {@link Context} associated with the player.
-   * @param eventHandler A handler to use when invoking event listeners and outputs.
+   * @param context               The {@link Context} associated with the player.
+   * @param eventHandler          A handler to use when invoking event listeners and outputs.
    * @param extensionRendererMode The extension renderer mode.
-   * @param out An array to which the built renderers should be appended.
+   * @param out                   An array to which the built renderers should be appended.
    */
   protected void buildMiscellaneousRenderers(
       Context context,
@@ -829,15 +835,15 @@ public class DefaultRenderersFactory implements RenderersFactory {
   /**
    * Builds an {@link AudioSink} to which the audio renderers will output.
    *
-   * @param context The {@link Context} associated with the player.
-   * @param enableFloatOutput Whether to enable use of floating point audio output, if available.
+   * @param context                         The {@link Context} associated with the player.
+   * @param enableFloatOutput               Whether to enable use of floating point audio output, if available.
    * @param enableAudioOutputPlaybackParams Whether to enable setting playback speed via the {@link
-   *     AudioOutput}, using {@link android.media.AudioTrack#setPlaybackParams(PlaybackParams)} by
-   *     default, if supported. The {@link AudioOutput} speed adjustment is lower latency, but
-   *     device-dependent, less reliable or may offer fewer available speeds.
+   *                                        AudioOutput}, using {@link android.media.AudioTrack#setPlaybackParams(PlaybackParams)} by
+   *                                        default, if supported. The {@link AudioOutput} speed adjustment is lower latency, but
+   *                                        device-dependent, less reliable or may offer fewer available speeds.
    * @return The {@link AudioSink} to which the audio renderers will output. May be {@code null} if
-   *     no audio renderers are required. If {@code null} is returned then {@link
-   *     #buildAudioRenderers} will not be called.
+   * no audio renderers are required. If {@code null} is returned then {@link
+   * #buildAudioRenderers} will not be called.
    */
   @Nullable
   protected AudioSink buildAudioSink(
@@ -880,17 +886,17 @@ public class DefaultRenderersFactory implements RenderersFactory {
    * <p>If {@link #buildVideoRenderers} is overridden to provide custom video renderers, then this
    * method must also be overridden to supply corresponding custom secondary video renderers.
    *
-   * @param renderer The primary {@link Renderer} for which to create the secondary.
-   * @param context The {@link Context} associated with the player.
-   * @param extensionRendererMode The extension renderer mode.
-   * @param mediaCodecSelector A decoder selector.
-   * @param enableDecoderFallback Whether to enable fallback to lower-priority decoders if decoder
-   *     initialization fails. This may result in using a decoder that is slower/less efficient than
-   *     the primary decoder.
-   * @param eventHandler A handler associated with the main thread's looper.
-   * @param eventListener An event listener.
+   * @param renderer                  The primary {@link Renderer} for which to create the secondary.
+   * @param context                   The {@link Context} associated with the player.
+   * @param extensionRendererMode     The extension renderer mode.
+   * @param mediaCodecSelector        A decoder selector.
+   * @param enableDecoderFallback     Whether to enable fallback to lower-priority decoders if decoder
+   *                                  initialization fails. This may result in using a decoder that is slower/less efficient than
+   *                                  the primary decoder.
+   * @param eventHandler              A handler associated with the main thread's looper.
+   * @param eventListener             An event listener.
    * @param allowedVideoJoiningTimeMs The maximum duration for which video renderers can attempt to
-   *     seamlessly join an ongoing playback, in milliseconds.
+   *                                  seamlessly join an ongoing playback, in milliseconds.
    * @return The created secondary {@link Renderer renderer instance}.
    */
   @Nullable
@@ -934,7 +940,9 @@ public class DefaultRenderersFactory implements RenderersFactory {
     return codecAdapterFactory;
   }
 
-  /** Returns the {@link ImageDecoder.Factory} used to build the image renderer. */
+  /**
+   * Returns the {@link ImageDecoder.Factory} used to build the image renderer.
+   */
   @ForOverride
   protected ImageDecoder.Factory getImageDecoderFactory(Context context) {
     return new BitmapFactoryImageDecoder.Factory(context);

@@ -39,10 +39,15 @@ import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
 
-/** {@link Muxer} implementation that uses an {@link Mp4Muxer}. */
+/**
+ * {@link Muxer} implementation that uses an {@link Mp4Muxer}.
+ */
 @UnstableApi
 public final class InAppMp4Muxer implements Muxer {
-  /** Provides {@linkplain Metadata.Entry metadata} to add in the output MP4 file. */
+
+  /**
+   * Provides {@linkplain Metadata.Entry metadata} to add in the output MP4 file.
+   */
   public interface MetadataProvider {
 
     /**
@@ -57,13 +62,19 @@ public final class InAppMp4Muxer implements Muxer {
     void updateMetadataEntries(Set<Metadata.Entry> metadataEntries);
   }
 
-  /** {@link Muxer.Factory} for {@link InAppMp4Muxer}. */
+  /**
+   * {@link Muxer.Factory} for {@link InAppMp4Muxer}.
+   */
   public static final class Factory implements Muxer.Factory {
-    @Nullable private final MetadataProvider metadataProvider;
+
+    @Nullable
+    private final MetadataProvider metadataProvider;
 
     private long videoDurationUs;
 
-    /** Creates an instance with default values. */
+    /**
+     * Creates an instance with default values.
+     */
     public Factory() {
       this(/* metadataProvider= */ null);
     }
@@ -89,8 +100,8 @@ public final class InAppMp4Muxer implements Muxer {
      * last sample will be same as that of the sample before that.
      *
      * @param videoDurationUs The duration of the video track (in microseconds) in the output, or
-     *     {@link C#TIME_UNSET} to not set any duration. Only applicable when a video track is
-     *     {@linkplain #addTrack(Format) added}.
+     *                        {@link C#TIME_UNSET} to not set any duration. Only applicable when a video track is
+     *                        {@linkplain #addTrack(Format) added}.
      * @return This factory.
      */
     @CanIgnoreReturnValue
@@ -137,7 +148,8 @@ public final class InAppMp4Muxer implements Muxer {
   private static final int TRACK_ID_UNSET = -1;
 
   private final Mp4Muxer muxer;
-  @Nullable private final MetadataProvider metadataProvider;
+  @Nullable
+  private final MetadataProvider metadataProvider;
   private final long videoDurationUs;
   private final Set<Metadata.Entry> metadataEntries;
 
@@ -177,6 +189,7 @@ public final class InAppMp4Muxer implements Muxer {
               videoDurationUs));
       return;
     }
+
     muxer.writeSampleData(trackId, byteBuffer, bufferInfo);
   }
 

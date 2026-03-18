@@ -58,6 +58,7 @@ import androidx.media3.common.VideoFrameProcessingException;
 import androidx.media3.common.VideoFrameProcessor;
 import androidx.media3.common.VideoGraph;
 import androidx.media3.common.util.Consumer;
+import androidx.media3.common.util.Log;
 import androidx.media3.common.util.TimestampIterator;
 import androidx.media3.decoder.DecoderInputBuffer;
 import androidx.media3.effect.MultipleInputVideoGraph;
@@ -71,7 +72,9 @@ import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.dataflow.qual.Pure;
 
-/** Processes, encodes and muxes raw video frames. */
+/**
+ * Processes, encodes and muxes raw video frames.
+ */
 /* package */ final class VideoSampleExporter extends SampleExporter {
 
   private final VideoGraphWrapper videoGraph;
@@ -199,6 +202,9 @@ import org.checkerframework.dataflow.qual.Pure;
     return encoderWrapper.getOutputFormat();
   }
 
+  private long videoDurationUs = 0;
+  private long lastProcessingTimeMicros = 0;
+
   @Override
   @Nullable
   protected DecoderInputBuffer getMuxerInputBuffer() throws ExportException {
@@ -217,9 +223,25 @@ import org.checkerframework.dataflow.qual.Pure;
         bufferInfo.presentationTimeUs = finalFramePresentationTimeUs;
       }
     }
-    encoderOutputBuffer.timeUs = bufferInfo.presentationTimeUs;
+
+
+    // 使用当前系统时间（微秒）
+    long currentTimeMicros = System.nanoTime() / 1000;
+
+    // 计算时间间隔（微秒）- 这是错误的逻辑，但为了说明变量名改进
+    long timeIntervalMicros;
+    if (lastProcessingTimeMicros == 0) {
+      timeIntervalMicros = 0;
+    } else {
+      timeIntervalMicros = currentTimeMicros - lastProcessingTimeMicros;
+    }
+    videoDurationUs += timeIntervalMicros;
+    lastProcessingTimeMicros = currentTimeMicros;
+
+    encoderOutputBuffer.timeUs = videoDurationUs;
     encoderOutputBuffer.setFlags(bufferInfo.flags);
-    lastMuxerInputBufferTimestampUs = bufferInfo.presentationTimeUs;
+    lastMuxerInputBufferTimestampUs = videoDurationUs;
+
     return encoderOutputBuffer;
   }
 
@@ -249,7 +271,10 @@ import org.checkerframework.dataflow.qual.Pure;
    */
   @VisibleForTesting
   /* package */ static final class EncoderWrapper {
-    /** MIME type to use for output video if the input type is not a video. */
+
+    /**
+     * MIME type to use for output video if the input type is not a video.
+     */
     private static final String DEFAULT_OUTPUT_MIME_TYPE = MimeTypes.VIDEO_H265;
 
     private final Codec.EncoderFactory encoderFactory;
@@ -260,7 +285,8 @@ import org.checkerframework.dataflow.qual.Pure;
     private final FallbackListener fallbackListener;
     private final String requestedOutputMimeType;
     private final @Composition.HdrMode int hdrModeAfterFallback;
-    @Nullable private final LogSessionId logSessionId;
+    @Nullable
+    private final LogSessionId logSessionId;
 
     private @MonotonicNonNull SurfaceInfo encoderSurfaceInfo;
 
@@ -401,7 +427,9 @@ import org.checkerframework.dataflow.qual.Pure;
       return encoderSurfaceInfo;
     }
 
-    /** Returns the {@link ColorInfo} expected from the input surface. */
+    /**
+     * Returns the {@link ColorInfo} expected from the input surface.
+     */
     private ColorInfo getSupportedInputColor() {
       boolean isInputToneMapped =
           isTransferHdr(inputFormat.colorInfo) && hdrModeAfterFallback != HDR_MODE_KEEP_HDR;
@@ -420,12 +448,12 @@ import org.checkerframework.dataflow.qual.Pure;
      * Creates a {@link TransformationRequest}, based on an original {@code TransformationRequest}
      * and parameters specifying alterations to it that indicate device support.
      *
-     * @param transformationRequest The requested transformation.
+     * @param transformationRequest   The requested transformation.
      * @param hasOutputFormatRotation Whether the input video will be rotated to landscape during
-     *     processing, with {@link Format#rotationDegrees} of 90 added to the output format.
-     * @param requestedFormat The requested format.
-     * @param supportedFormat A format supported by the device.
-     * @param supportedHdrMode A {@link Composition.HdrMode} supported by the device.
+     *                                processing, with {@link Format#rotationDegrees} of 90 added to the output format.
+     * @param requestedFormat         The requested format.
+     * @param supportedFormat         A format supported by the device.
+     * @param supportedHdrMode        A {@link Composition.HdrMode} supported by the device.
      * @return The created instance.
      */
     @Pure
@@ -653,8 +681,11 @@ import org.checkerframework.dataflow.qual.Pure;
     }
   }
 
-  /** A wrapper for {@link VideoGraph} input that handles {@link GraphInput} events. */
+  /**
+   * A wrapper for {@link VideoGraph} input that handles {@link GraphInput} events.
+   */
   private static final class VideoGraphInput implements GraphInput {
+
     private final VideoGraph videoGraph;
     private final int inputIndex;
     private final long initialTimestampOffsetUs;

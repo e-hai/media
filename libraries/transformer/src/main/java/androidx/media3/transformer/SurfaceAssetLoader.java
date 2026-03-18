@@ -29,6 +29,7 @@ import androidx.media3.common.C;
 import androidx.media3.common.Format;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MimeTypes;
+import androidx.media3.common.util.Log;
 import androidx.media3.common.util.UnstableApi;
 import com.google.common.collect.ImmutableMap;
 import java.util.Objects;
@@ -57,8 +58,11 @@ public final class SurfaceAssetLoader implements AssetLoader {
    */
   public static final String MEDIA_ITEM_URI_SCHEME = "transformer_surface_asset";
 
-  /** Callbacks for {@link SurfaceAssetLoader} events. */
+  /**
+   * Callbacks for {@link SurfaceAssetLoader} events.
+   */
   public interface Callback {
+
     /**
      * Called when the asset loader has been created. Pass the {@linkplain #setContentFormat(Format)
      * content format} to the provided asset loader to trigger surface creation. May be called on
@@ -69,19 +73,23 @@ public final class SurfaceAssetLoader implements AssetLoader {
     /**
      * Called when the input surface is ready to write to. May be called on any thread.
      *
-     * @param surface The {@link Surface} to write to.
+     * @param surface         The {@link Surface} to write to.
      * @param editedMediaItem The {@link EditedMediaItem} used to create the associated {@link
-     *     SurfaceAssetLoader}.
+     *                        SurfaceAssetLoader}.
      */
     void onSurfaceReady(Surface surface, EditedMediaItem editedMediaItem);
   }
 
-  /** Factory for {@link SurfaceAssetLoader} instances. */
+  /**
+   * Factory for {@link SurfaceAssetLoader} instances.
+   */
   public static final class Factory implements AssetLoader.Factory {
 
     private final Callback callback;
 
-    /** Creates a factory with the specified callback. */
+    /**
+     * Creates a factory with the specified callback.
+     */
     public Factory(Callback callback) {
       this.callback = callback;
     }
@@ -110,6 +118,9 @@ public final class SurfaceAssetLoader implements AssetLoader {
 
   private boolean isStarted;
   private boolean isVideoEndOfStreamSignaled;
+  private boolean isTrackAddedReported;
+  private int retryCount;
+  private static final int MAX_RETRY_COUNT = 500; // 500 * 10ms = 5 seconds max wait time
   private @MonotonicNonNull SampleConsumer sampleConsumer;
   private @MonotonicNonNull Format contentFormat;
 
@@ -145,12 +156,16 @@ public final class SurfaceAssetLoader implements AssetLoader {
         });
   }
 
-  /** Returns the {@link EditedMediaItem} being loaded by this instance. */
+  /**
+   * Returns the {@link EditedMediaItem} being loaded by this instance.
+   */
   public EditedMediaItem getEditedMediaItem() {
     return editedMediaItem;
   }
 
-  /** Signals that no further input frames will be rendered. May be called on any thread. */
+  /**
+   * Signals that no further input frames will be rendered. May be called on any thread.
+   */
   public void signalEndOfInput() {
     handler.post(
         () -> {
@@ -192,11 +207,31 @@ public final class SurfaceAssetLoader implements AssetLoader {
     if (!isStarted || contentFormat == null) {
       return;
     }
-    listener.onTrackCount(1);
-    listener.onDurationUs(C.TIME_UNSET);
-    listener.onTrackAdded(contentFormat, SUPPORTED_OUTPUT_TYPE_DECODED);
+    Log.d("SurfaceAssetLoader", "maybeFinishPreparation=" + contentFormat);
+    
+    if (!isTrackAddedReported) {
+      listener.onTrackCount(1);
+      listener.onDurationUs(C.TIME_UNSET);
+      listener.onTrackAdded(contentFormat, SUPPORTED_OUTPUT_TYPE_DECODED);
+      isTrackAddedReported = true;
+    }
+    
     try {
-      sampleConsumer = checkNotNull(listener.onOutputFormat(contentFormat));
+      SampleConsumer tempSampleConsumer = listener.onOutputFormat(contentFormat);
+      if (tempSampleConsumer == null) {
+        // The listener is not ready to provide a SampleConsumer yet, schedule a retry
+        Log.d("SurfaceAssetLoader", "onOutputFormat returned null, scheduling retry " + retryCount);
+        retryCount++;
+        if (retryCount > MAX_RETRY_COUNT) {
+          Log.e("SurfaceAssetLoader", "Max retry count exceeded, failing gracefully");
+          listener.onError(ExportException.createForUnexpected(new RuntimeException("SurfaceAssetLoader failed to get SampleConsumer after " + MAX_RETRY_COUNT + " retries")));
+          return;
+        }
+        handler.postDelayed(this::maybeFinishPreparation, 10); // Retry after 10ms
+        return;
+      }
+      retryCount = 0; // Reset retry count on success
+      sampleConsumer = tempSampleConsumer;
       sampleConsumer.setOnInputSurfaceReadyListener(
           () ->
               callback.onSurfaceReady(

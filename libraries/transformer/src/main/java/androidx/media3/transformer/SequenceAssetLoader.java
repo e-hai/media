@@ -40,6 +40,7 @@ import androidx.media3.common.OnInputFrameProcessedListener;
 import androidx.media3.common.util.Clock;
 import androidx.media3.common.util.ConstantRateTimestampIterator;
 import androidx.media3.common.util.HandlerWrapper;
+import androidx.media3.common.util.Log;
 import androidx.media3.common.util.TimestampIterator;
 import androidx.media3.common.util.Util;
 import androidx.media3.decoder.DecoderInputBuffer;
@@ -158,6 +159,10 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
         this.assetLoaderFactory.createAssetLoader(
             editedMediaItems.get(0), looper, /* listener= */ this, compositionSettings);
     this.currentAssetLoader = currentAssetLoader;
+
+    Log.d("SequenceAssetLoader",
+        this.getClass().getSimpleName() + "@" + Integer.toHexString(System.identityHashCode(this))
+            + " init asset loader for " + editedMediaItems.get(0).mediaItem.localConfiguration.uri);
   }
 
   // Methods called from TransformerInternal thread.
@@ -168,6 +173,10 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
     if (editedMediaItems.size() > 1 || isLooping) {
       sequenceAssetLoaderListener.onDurationUs(C.TIME_UNSET);
     }
+    Log.d("SequenceAssetLoader",
+        this.getClass().getSimpleName() + "@" + Integer.toHexString(System.identityHashCode(this))
+            + " start asset loader for " + editedMediaItems.get(
+            0).mediaItem.localConfiguration.uri);
   }
 
   @Override
@@ -236,8 +245,8 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
    * {@link SampleConsumer}.
    *
    * @param onMediaItemChangedListener The {@link OnMediaItemChangedListener}.
-   * @param trackType The {@link C.TrackType} for which to listen to {@link MediaItem} change
-   *     events. Must be {@link C#TRACK_TYPE_AUDIO} or {@link C#TRACK_TYPE_VIDEO}.
+   * @param trackType                  The {@link C.TrackType} for which to listen to {@link MediaItem} change
+   *                                   events. Must be {@link C#TRACK_TYPE_AUDIO} or {@link C#TRACK_TYPE_VIDEO}.
    */
   public void addOnMediaItemChangedListener(
       OnMediaItemChangedListener onMediaItemChangedListener, @C.TrackType int trackType) {
@@ -249,6 +258,12 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
   @Override
   public boolean onTrackAdded(Format inputFormat, @SupportedOutputTypes int supportedOutputTypes) {
     boolean isAudio = getProcessedTrackType(inputFormat.sampleMimeType) == C.TRACK_TYPE_AUDIO;
+
+    Log.d("SequenceAssetLoader",
+        this.getClass().getSimpleName() + "@" + Integer.toHexString(System.identityHashCode(this))
+            + " onTrackAdded asset loader for " + editedMediaItems.get(
+            0).mediaItem.localConfiguration.uri + " isAudio=" + isAudio);
+
     DebugTraceUtil.logEvent(
         COMPONENT_ASSET_LOADER,
         EVENT_INPUT_FORMAT,
@@ -312,6 +327,11 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
   @Nullable
   @Override
   public SampleConsumerWrapper onOutputFormat(Format format) throws ExportException {
+    Log.d("SequenceAssetLoader",
+        this.getClass().getSimpleName() + "@" + Integer.toHexString(System.identityHashCode(this))
+            + " onOutputFormat asset loader for " + editedMediaItems.get(
+            0).mediaItem.localConfiguration.uri + " format=" + format);
+
     @C.TrackType int trackType = getProcessedTrackType(format.sampleMimeType);
     DebugTraceUtil.logEvent(
         COMPONENT_ASSET_LOADER,
@@ -332,6 +352,10 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
       @Nullable
       SampleConsumer wrappedSampleConsumer = sequenceAssetLoaderListener.onOutputFormat(format);
       if (wrappedSampleConsumer == null) {
+        Log.d("SequenceAssetLoader",
+            this.getClass().getSimpleName() + "@" + Integer.toHexString(System.identityHashCode(this))
+                + " onOutputFormat asset loader for " + editedMediaItems.get(
+                0).mediaItem.localConfiguration.uri + " wrappedSampleConsumer null");
         return null;
       }
       sampleConsumer = new SampleConsumerWrapper(wrappedSampleConsumer, trackType);
@@ -364,10 +388,10 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
       String missingTrackMessage =
           trackType == C.TRACK_TYPE_AUDIO
               ? "The preceding MediaItem does not contain any audio track. If the sequence starts"
-                  + " with an item without audio track (like images), followed by items with"
-                  + " audio tracks, then"
-                  + " EditedMediaItemSequence.Builder.experimentalSetForceAudioTrack() needs to"
-                  + " be set to true."
+              + " with an item without audio track (like images), followed by items with"
+              + " audio tracks, then"
+              + " EditedMediaItemSequence.Builder.experimentalSetForceAudioTrack() needs to"
+              + " be set to true."
               : "The preceding MediaItem does not contain any video track. If the sequence starts"
                   + " with an item without video track (audio only), followed by items with video"
                   + " tracks, then"
@@ -393,7 +417,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
   private static Bitmap getBlankImageBitmap() {
     return Bitmap.createBitmap(
-        new int[] {Color.BLACK},
+        new int[]{Color.BLACK},
         BLANK_IMAGE_BITMAP_WIDTH,
         BLANK_IMAGE_BITMAP_HEIGHT,
         Bitmap.Config.ARGB_8888);
@@ -428,8 +452,8 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
     SampleConsumerWrapper videoSampleConsumer =
         checkNotNull(sampleConsumersByTrackType.get(C.TRACK_TYPE_VIDEO));
     if (videoSampleConsumer.queueInputBitmap(
-            bitmap,
-            new ConstantRateTimestampIterator(currentAssetDurationUs, BLANK_IMAGE_FRAME_RATE))
+        bitmap,
+        new ConstantRateTimestampIterator(currentAssetDurationUs, BLANK_IMAGE_FRAME_RATE))
         != SampleConsumer.INPUT_RESULT_SUCCESS) {
       handler.postDelayed(() -> insertBlankFrames(bitmap), RETRY_DELAY_MS);
     } else {
@@ -471,8 +495,8 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
    * <p>Can be called from any thread.
    *
    * @param maxSequenceDurationUs The current maximum sequence duration, in microseconds.
-   * @param isFinal Whether the duration passed is final. Setting this value to {@code true} means
-   *     that the duration passed will not change anymore during the entire export.
+   * @param isFinal               Whether the duration passed is final. Setting this value to {@code true} means
+   *                              that the duration passed will not change anymore during the entire export.
    */
   public void setMaxSequenceDurationUs(long maxSequenceDurationUs, boolean isFinal) {
     this.maxSequenceDurationUs = maxSequenceDurationUs;
@@ -799,9 +823,12 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
     }
 
     @Override
-    public void release() {}
+    public void release() {
+    }
 
-    /** Outputs the gap format, scheduling to try again if unsuccessful. */
+    /**
+     * Outputs the gap format, scheduling to try again if unsuccessful.
+     */
     private void outputFormatToSequenceAssetLoader() {
       boolean audioPending = shouldProduceAudio && !producedAudio;
       boolean videoPending = shouldProduceVideo && !producedVideo;

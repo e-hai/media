@@ -28,6 +28,7 @@ import androidx.media3.common.Format;
 import androidx.media3.common.audio.AudioProcessor;
 import androidx.media3.common.audio.AudioProcessor.AudioFormat;
 import androidx.media3.common.audio.SonicAudioProcessor;
+import androidx.media3.common.util.Log;
 import androidx.media3.decoder.DecoderInputBuffer;
 import androidx.media3.effect.DebugTraceUtil;
 import com.google.common.collect.ImmutableList;
